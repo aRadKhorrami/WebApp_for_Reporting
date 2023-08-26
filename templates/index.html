@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My App</title>
+</head>
+<body>
+	<h1>Welcome to my app!</h1>
+	<form id="login-form">
+		<label for="username">Username:</label>
+		<input type="text" id="username" name="username"><br><br>
+		<label for="password">Password:</label>
+		<input type="password" id="password" name="password"><br><br>
+		<button type="submit">Submit</button>
+	</form>
+
+
+	<p>Here's some JavaScript code:</p>
+	<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+	  
+</body>
+</html>

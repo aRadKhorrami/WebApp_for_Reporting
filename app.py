@@ -51,6 +51,43 @@ def login():
 
 
 
+@app.route('/submit', methods=['GET', 'POST'])
+def submit():
+    if request.method == 'POST':    
+        data = request.get_json()
+
+        msisdn_nsk = data['msisdn_nsk']
+        actual_apn_v = data['actual_apn_v']
+        economic_code_n = data['economic_code_n']
+        kit_number_v = data['kit_number_v']                
+        
+        # Do something with the username and password
+        print(f"Received submit attempt with msisdn_nsk '{msisdn_nsk}', actual_apn_v '{actual_apn_v}', economic_code_n '{economic_code_n}', and kit_number_v '{kit_number_v}'")
+
+        # Perform user authentication (replace with your own authentication logic)
+
+#        if authenticate_user(user_, pass_):
+#            authenticated_users.add(user_)
+#            session['username'] = user_
+#            return redirect(url_for('download_excel'))
+
+        #check if last session_id works
+        server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
+        cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+        cursor = cnxn.cursor()
+        query = " select msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v FROM [dbo].[total_EDW_reports] \
+            where [msisdn_nsk] ='{}' ".format(msisdn_nsk) +" or [actual_apn_v]='{}' ".format(actual_apn_v) +" \
+            or [economic_code_n] ='{}' ".format(economic_code_n) +" or [kit_number_v]='{}' ;".format(kit_number_v)
+        Result = pd.read_sql(query, cnxn)
+        cursor.close()
+        cnxn.close() 
+        if (Result.size>0):
+            return jsonify({'message': f"Some records were found!"})
+        else:
+            return jsonify({'message': f"There was no record!"})  
+
+
+
 # Example query result as a list of dictionaries
 query_result = [
     {'Name': 'Alice', 'Age': 25},

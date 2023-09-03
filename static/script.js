@@ -1,4 +1,11 @@
-const form = document.getElementById('login-form');
+const loginForm = document.getElementById('login-form');
+const filterForm = document.getElementById('filter-form');
+// Get references to the objects
+var loginButton = document.getElementById("loginButton");
+var submitButton = document.getElementById("submitButton");
+var downloadButton = document.getElementById("downloadButton");
+
+
 function deletePreviousTable() {
     var tables = document.getElementsByTagName("table");
 
@@ -10,10 +17,14 @@ function deletePreviousTable() {
       console.log("There are no tables in the document.");
     }
   }
-form.addEventListener('submit', (event) => {
+loginButton.addEventListener('click', (event) => {
+//form.addEventListener('submit', (event) => {
     event.preventDefault(); // Prevent form submission
+    // Hide login form, show data input form
+    loginForm.style.display = "none";
+    filterForm.style.display = "block";
 
-    const formData = new FormData(form); // Get form data
+    const formData = new FormData(loginForm); // Get form data
     const username = formData.get('username');
     const password = formData.get('password');
     //alert(username);
@@ -65,3 +76,74 @@ form.addEventListener('submit', (event) => {
     .catch(error => console.error(error));
 
 });
+
+
+submitButton.addEventListener('click', (event) => {
+    //form.addEventListener('submit', (event) => {
+        event.preventDefault(); // Prevent form submission
+        // Hide login form, show data input form
+        loginForm.style.display = "none";
+        filterForm.style.display = "block";
+    
+        const formData = new FormData(filterForm); // Get form data
+        const msisdn_nsk = formData.get('msisdn_nsk');
+        const actual_apn_v = formData.get('actual_apn_v');
+        const economic_code_n = formData.get('economic_code_n');
+        const kit_number_v = formData.get('kit_number_v');        
+        //alert(username);
+    
+        // Send data to Flask endpoint
+        fetch('/submit', {
+            method: 'POST',
+            body: JSON.stringify({msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v}),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    /*
+        .then(response => response.json())
+        //.then(response => alert(response))
+        //.then(data => console.log(data.message))
+        .then(data => alert(data.message))
+        //.catch(error => console.error(error));
+        .catch(error => alert(error));
+    */    
+        .then(response => response.json())
+        .then(data => {
+            // Display the message in the message-container div
+            const messageContainer = document.getElementById('message-container');
+            messageContainer.textContent = data.message;
+        })
+        .catch(error => console.error(error));
+    
+    });
+    
+
+
+downloadButton.addEventListener('click', async (event) => {
+    event.preventDefault(); // Prevent default link behavior
+    try {
+        const response = await fetch('/download_excel', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'query_result.xlsx'; // Set desired filename
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } else {
+            console.error('Download failed.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+

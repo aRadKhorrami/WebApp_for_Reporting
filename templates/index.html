@@ -10,9 +10,25 @@
 		<input type="text" id="username" name="username"><br><br>
 		<label for="password">Password:</label>
 		<input type="password" id="password" name="password"><br><br>
-		<button type="submit">Submit</button>
+		<button type="submit" id="loginButton">Login</button>
 	</form>
+	<form id="filter-form" style="display: none;">
+		<label for="msisdn_nsk">msisdn_nsk:</label>
+		<input type="text" id="msisdn_nsk" name="msisdn_nsk"><br><br>		
+		<label for="actual_apn_v">actual_apn_v:</label>
+		<input type="text" id="actual_apn_v" name="actual_apn_v"><br><br>
+		<label for="economic_code_n">economic_code_n:</label>
+		<input type="text" id="economic_code_n" name="economic_code_n"><br><br>		
+		<label for="kit_number_v">kit_number_v:</label>
+		<input type="text" id="kit_number_v" name="kit_number_v"><br><br>
+		
+		<button type="submit" id="submitButton">Submit</button>
+		<button type="download" id="downloadButton">Download</button>
+	</form>	
 
+    <div id="message-container">
+        <!-- The message will be displayed here -->
+    </div>	
 
 	<p>Here's some JavaScript code:</p>
 	<script src="{{ url_for('static', filename='script.js') }}"></script>

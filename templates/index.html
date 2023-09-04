@@ -14,23 +14,27 @@
 	</form>
 	<form id="filter-form" style="display: none;">
 		<label for="msisdn_nsk">msisdn_nsk:</label>
-		<input type="text" id="msisdn_nsk" name="msisdn_nsk"><br><br>		
+		<input type="text" id="msisdn_nsk" name="msisdn_nsk">
+		<span id="display_msisdn_nsk"></span><br><br>		
 		<label for="actual_apn_v">actual_apn_v:</label>
-		<input type="text" id="actual_apn_v" name="actual_apn_v"><br><br>
+		<input type="text" id="actual_apn_v" name="actual_apn_v">
+		<span id="display_actual_apn_v"></span><br><br>
 		<label for="economic_code_n">economic_code_n:</label>
-		<input type="text" id="economic_code_n" name="economic_code_n"><br><br>		
+		<input type="text" id="economic_code_n" name="economic_code_n">
+		<span id="display_economic_code_n"></span><br><br>		
 		<label for="kit_number_v">kit_number_v:</label>
-		<input type="text" id="kit_number_v" name="kit_number_v"><br><br>
+		<input type="text" id="kit_number_v" name="kit_number_v">
+		<span id="display_kit_number_v"></span><br><br>
 		
-		<button type="submit" id="submitButton">Submit</button>
-		<button type="download" id="downloadButton">Download</button>
+		<button type="submit" id="submitButton">Submit</button><br><br>
+		<button type="download" id="downloadButton" style="display: none;">Download</button>
 	</form>	
 
     <div id="message-container">
         <!-- The message will be displayed here -->
     </div>	
 
-	<p>Here's some JavaScript code:</p>
+
 	<script src="{{ url_for('static', filename='script.js') }}"></script>
 
 	  

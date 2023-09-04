@@ -5,6 +5,11 @@ var loginButton = document.getElementById("loginButton");
 var submitButton = document.getElementById("submitButton");
 var downloadButton = document.getElementById("downloadButton");
 
+const display_msisdn_nsk = document.getElementById('display_msisdn_nsk');
+const display_actual_apn_v = document.getElementById('display_actual_apn_v');
+const display_economic_code_n = document.getElementById('display_economic_code_n');
+const display_kit_number_v = document.getElementById('display_kit_number_v');
+
 
 function deletePreviousTable() {
     var tables = document.getElementsByTagName("table");
@@ -21,8 +26,8 @@ loginButton.addEventListener('click', (event) => {
 //form.addEventListener('submit', (event) => {
     event.preventDefault(); // Prevent form submission
     // Hide login form, show data input form
-    loginForm.style.display = "none";
-    filterForm.style.display = "block";
+//    loginForm.style.display = "none";
+//    filterForm.style.display = "block";
 
     const formData = new FormData(loginForm); // Get form data
     const username = formData.get('username');
@@ -48,6 +53,19 @@ loginButton.addEventListener('click', (event) => {
     .then(response => response.json())
     .then(data => {
     console.log(data); // log table data to console
+
+    const messageContainer = document.getElementById('message-container');
+ 
+    if (data.message=='Successful Login!'){
+        filterForm.style.display = "block";
+        loginForm.style.display = "none";
+        messageContainer.textContent = ""
+    }
+    else if (data.message=='Wrong Username or Password!'){
+        messageContainer.textContent = data.message;
+        filterForm.style.display = "none";
+        loginForm.style.display = "block";
+    }    
 
     deletePreviousTable();
     // create table element and table header row
@@ -91,6 +109,13 @@ submitButton.addEventListener('click', (event) => {
         const economic_code_n = formData.get('economic_code_n');
         const kit_number_v = formData.get('kit_number_v');        
         //alert(username);
+
+        display_msisdn_nsk.textContent = msisdn_nsk;
+        display_actual_apn_v.textContent = actual_apn_v;
+        display_economic_code_n.textContent = economic_code_n;
+        display_kit_number_v.textContent = kit_number_v;
+
+        downloadButton.style.display = "none";
     
         // Send data to Flask endpoint
         fetch('/submit', {
@@ -113,6 +138,9 @@ submitButton.addEventListener('click', (event) => {
             // Display the message in the message-container div
             const messageContainer = document.getElementById('message-container');
             messageContainer.textContent = data.message;
+            if (data.message=='Some records were found!'){
+                downloadButton.style.display = "block";
+            }
         })
         .catch(error => console.error(error));
     

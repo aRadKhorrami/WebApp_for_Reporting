@@ -28,7 +28,11 @@ def login():
         if authenticate_user(user_, pass_):
             authenticated_users.add(user_)
             session['username'] = user_
-            return redirect(url_for('download_excel'))
+            return jsonify({'message': f"Successful Login!"})
+        else:
+            return jsonify({'message': f"Wrong Username or Password!"})  
+
+#            return redirect(url_for('download_excel'))
 
         #check if last session_id works
         server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  

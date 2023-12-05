@@ -1,8 +1,11 @@
+from unittest import result
 from flask import Flask, render_template, jsonify, request, Response, session, redirect, url_for
 from io import BytesIO  # Import BytesIO
 import pyodbc
 import pandas as pd
-import xlsxwriter
+#import xlsxwriter
+
+Result = pd.DataFrame()
 
 
 app = Flask(__name__, static_folder='static')
@@ -16,6 +19,7 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    global user_
     if request.method == 'POST':    
         data = request.get_json()
         user_ = data['username']
@@ -32,28 +36,6 @@ def login():
         else:
             return jsonify({'message': f"Wrong Username or Password!"})  
 
-#            return redirect(url_for('download_excel'))
-
-        #check if last session_id works
-        server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
-        cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
-        cursor = cnxn.cursor()
-        query = " select USER FROM [dbo].[CREDENTIALS] where [USER] ='{}' ".format(user_) +" and [PASS]='{}' ;".format(pass_)
-        Result = pd.read_sql(query, cnxn)
-        # create empty table
-        table = []
-        if (Result.size>0):
-            #    return jsonify({'message': f"Login attempt with username '{username}' and password '{password}' was successful!"})
-            for i in range(8):
-                row = {'col1': f"{pass_}", 'col2': '2', 'col3': '3'}
-                table.append(row)
-        cursor.close()
-        cnxn.close() 
-
-            # return table as json
-        return jsonify(table)   
-
-
 
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
@@ -68,36 +50,34 @@ def submit():
         # Do something with the username and password
         print(f"Received submit attempt with msisdn_nsk '{msisdn_nsk}', actual_apn_v '{actual_apn_v}', economic_code_n '{economic_code_n}', and kit_number_v '{kit_number_v}'")
 
-        # Perform user authentication (replace with your own authentication logic)
-
-#        if authenticate_user(user_, pass_):
-#            authenticated_users.add(user_)
-#            session['username'] = user_
-#            return redirect(url_for('download_excel'))
-
-        #check if last session_id works
         server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
         cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+        cnxn = pyodbc.connect('Driver={SQL Server};'
+                          'Server=tew116;'
+                          'Database=EB_DB;'
+                          'Trusted_Connection=yes;')        
         cursor = cnxn.cursor()
-        query = " select msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v FROM [dbo].[total_EDW_reports] \
-            where [msisdn_nsk] ='{}' ".format(msisdn_nsk) +" or [actual_apn_v]='{}' ".format(actual_apn_v) +" \
-            or [economic_code_n] ='{}' ".format(economic_code_n) +" or [kit_number_v]='{}' ;".format(kit_number_v)
-        Result = pd.read_sql(query, cnxn)
+#        authorized_query = " select msisdn_nsk, economic_code_n FROM [dbo].[total_EDW_reports] \
+#            where [msisdn_nsk] ='{}' ".format(msisdn_nsk) +" and  [economic_code_n] IN \
+#                (select [economic_code_n] from [sahar].[dbo].[AUTHENTICATION] where [USER] ='{}' ".format(user_) +");"
+        
+        authorized_query = generate_authorized_query(msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v, user_)
+        report_query = generate_report_query(msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v)
+        print(report_query)
+
+        global Result
+        Result = pd.read_sql(report_query, cnxn)
+        Authorized = pd.read_sql(authorized_query, cnxn)
         cursor.close()
         cnxn.close() 
-        if (Result.size>0):
-            return jsonify({'message': f"Some records were found!"})
+
+        if (Authorized.size>0):
+            if (Result.size>0):
+                return jsonify({'message': f"Some records were found!"})
+            else:
+                return jsonify({'message': f"There was no record!"}) 
         else:
-            return jsonify({'message': f"There was no record!"})  
-
-
-
-# Example query result as a list of dictionaries
-query_result = [
-    {'Name': 'Alice', 'Age': 25},
-    {'Name': 'Bob', 'Age': 30},
-    {'Name': 'Carol', 'Age': 28}
-]
+            return jsonify({'message': f"You don't have sufficient permission to see the results!"})
 
 
 
@@ -106,34 +86,35 @@ def download_excel():
     if 'username' in session and session['username'] in authenticated_users:
         print("'username' in session and session['username'] in authenticated_users")
         
-        #check if last session_id works
-        server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
-        cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
-        cursor = cnxn.cursor()
-
-        query = "select * FROM [sahar].[dbo].[EDWEB_DAY_MVPN_PREPAID_20230810_20230811]"
-        df = pd.read_sql(query, cnxn)
-        # Create a Pandas DataFrame from the query result
-    #   df = pd.DataFrame(query_result)
-
-        cursor.close()
-        cnxn.close()     
-
         # Create an Excel writer
-        output = BytesIO()
-        writer = pd.ExcelWriter(output, engine='xlsxwriter')
+#        output = BytesIO()
+#        writer = pd.ExcelWriter(output, engine='xlsxwriter')
 
         # Write the DataFrame to the Excel writer
-        df.to_excel(writer, sheet_name='Sheet1', index=False)
+        #df.to_excel(writer, sheet_name='Sheet1', index=False)
+        global Result
+#        Result.to_excel(writer, sheet_name='Sheet1', index=False)
 
         # Save the Excel writer to the BytesIO object
-        writer.close()
-        output.seek(0)
+#        writer.close()
+#        output.seek(0)
+
+        # Create a CSV string
+        csv_data = Result.to_csv(index=False)
+
+        # Convert the string to bytes
+        csv_bytes = csv_data.encode('utf-8')        
 
         # Create a Flask response with the Excel data
-        response = Response(output.read())
-        response.headers['Content-Disposition'] = 'attachment; filename=query_result.xlsx'
-        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+#        response = Response(output.read())
+        # Create a Flask response with the CSV data
+        response = Response(csv_bytes)
+
+#        response.headers['Content-Disposition'] = 'attachment; filename=query_result.xlsx'
+#        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+        response.headers['Content-Disposition'] = 'attachment; filename=query_result.csv'
+        response.headers['Content-Type'] = 'text/csv'
 
         return response
     else:
@@ -144,6 +125,10 @@ def authenticate_user(user_, pass_):
     #check if last session_id works
     server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
     cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+    cnxn = pyodbc.connect('Driver={SQL Server};'
+                          'Server=tew116;'
+                          'Database=EB_DB;'
+                          'Trusted_Connection=yes;')       
     cursor = cnxn.cursor()
     query = " select USER FROM [dbo].[CREDENTIALS] where [USER] ='{}' ".format(user_) +" and [PASS]='{}' ;".format(pass_)
     Result = pd.read_sql(query, cnxn)
@@ -154,6 +139,47 @@ def authenticate_user(user_, pass_):
     else:
         return False
 
+def generate_report_query(msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v):
+    # Initialize the base query
+    query = "select * FROM [dbo].[total_EDW_reports] WHERE "
+
+    # Create conditions for non-null values
+    conditions = []
+    if msisdn_nsk is not '':
+        conditions.append(f"msisdn_nsk = '{msisdn_nsk}'")
+    if actual_apn_v is not '':
+        conditions.append(f"actual_apn_v = '{actual_apn_v}'")
+    if economic_code_n is not '':
+        conditions.append(f"economic_code_n = '{economic_code_n}'")
+    if kit_number_v is not '':
+        conditions.append(f"kit_number_v = '{kit_number_v}'")
+
+    # Concatenate conditions with 'AND' operator
+    query += " AND ".join(conditions)
+
+    return query
+
+
+def generate_authorized_query(msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v, user_):
+    # Initialize the base query
+    query = "select * FROM [sahar].[dbo].[total_EDW_reports] WHERE "
+
+    # Create conditions for non-null values
+    conditions = []
+    if msisdn_nsk is not '':
+        conditions.append(f"msisdn_nsk = '{msisdn_nsk}'")
+    if actual_apn_v is not '':
+        conditions.append(f"actual_apn_v = '{actual_apn_v}'")
+    if economic_code_n is not '':
+        conditions.append(f"economic_code_n = '{economic_code_n}'")
+    if kit_number_v is not '':
+        conditions.append(f"kit_number_v = '{kit_number_v}'")
+
+    # Concatenate conditions with 'AND' operator
+    query += " AND ".join(conditions)
+    query += " and  [economic_code_n] IN \
+                (select [economic_code_n] from [dbo].[AUTHENTICATION] where [USER] ='{}' ".format(user_) +");"
+    return query
 
 
 if __name__ == '__main__':

@@ -47,19 +47,16 @@ def submit():
         economic_code_n = data['economic_code_n']
         kit_number_v = data['kit_number_v']                
         
-        # Do something with the username and password
+        # Do something with the recieved parameters
         print(f"Received submit attempt with msisdn_nsk '{msisdn_nsk}', actual_apn_v '{actual_apn_v}', economic_code_n '{economic_code_n}', and kit_number_v '{kit_number_v}'")
 
-        server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
-        cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+#        server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
+#        cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
         cnxn = pyodbc.connect('Driver={SQL Server};'
                           'Server=tew116;'
                           'Database=EB_DB;'
                           'Trusted_Connection=yes;')        
         cursor = cnxn.cursor()
-#        authorized_query = " select msisdn_nsk, economic_code_n FROM [dbo].[total_EDW_reports] \
-#            where [msisdn_nsk] ='{}' ".format(msisdn_nsk) +" and  [economic_code_n] IN \
-#                (select [economic_code_n] from [sahar].[dbo].[AUTHENTICATION] where [USER] ='{}' ".format(user_) +");"
         
         authorized_query = generate_authorized_query(msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v, user_)
         report_query = generate_report_query(msisdn_nsk, actual_apn_v, economic_code_n, kit_number_v)
@@ -100,10 +97,10 @@ def download_excel():
 #        output.seek(0)
 
         # Create a CSV string
-        csv_data = Result.to_csv(index=False)
+        csv_data = Result.to_csv(index=False, encoding='utf-8-sig')
 
         # Convert the string to bytes
-        csv_bytes = csv_data.encode('utf-8')        
+        csv_bytes = csv_data.encode('utf-8-sig')        
 
         # Create a Flask response with the Excel data
 #        response = Response(output.read())
@@ -123,8 +120,8 @@ def download_excel():
 
 def authenticate_user(user_, pass_):
     #check if last session_id works
-    server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
-    cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+#    server = '127.0.0.1'; database = 'sahar'; username = 'flask'; password = '123'  
+#    cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
     cnxn = pyodbc.connect('Driver={SQL Server};'
                           'Server=tew116;'
                           'Database=EB_DB;'
